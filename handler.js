@@ -8,7 +8,7 @@ const Subtitle = require("subtitle");
 const fs = require("fs");
 
 const { getCounter, setCounter } = require("./lib/counter");
-const { getTags } = require("./lib/tags");
+const { getTags, getUserTags } = require("./lib/tags");
 const { getSubtitleAt } = require("./lib/subtitle");
 
 const Client = require("instagram-private-api").V1;
@@ -29,8 +29,10 @@ module.exports.post = async (event, context) => {
 
   console.log("Getting tags");
   // get tags from machine learning
-  const tags = (await getTags(file)) + " " + process.env_EXTRA_TAGS;
+  const tags = (await getTags(file)).join(" ") + " " + process.env_EXTRA_TAGS;
   const caption = (await getSubtitleAt(number)) + "\n\n" + tags;
+  const userTags = await getUserTags(file);
+
   console.log(caption);
   console.log("Posting image");
 
@@ -40,11 +42,14 @@ module.exports.post = async (event, context) => {
   }).promise();
 
   const upload = await Client.Upload.photo(session, image.Body);
-
+  console.log(JSON.stringify(userTags));
   const medium = await Client.Media.configurePhoto(
     session,
     upload.params.uploadId,
-    caption
+    caption,
+    1280,
+    688,
+    userTags
   );
 
   await setCounter(number.toString());
