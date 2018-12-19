@@ -1,0 +1,14 @@
+service: homealone-serverless # NOTE: update this with your service name
+provider:
+  name: aws
+  region: eu-west-1
+  runtime: nodejs8.10
+
+functions:
+  post:
+    handler: handler.post
+    events:
+      - schedule: cron(0 10 * * ? *)
+
+plugins:
+  - serverless-offline
